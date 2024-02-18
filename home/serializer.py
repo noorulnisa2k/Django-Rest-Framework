@@ -20,13 +20,10 @@ class TodoSerializer(serializers.ModelSerializer):
     # >>>>>> to validate single field, data will contain only todo_title
     def validate_todo_title(self, data):
         if data:
-            print(data)
             regex = re.compile('[@_!#$%^&*()<>?/\|}{~:}]')
             if len(data) < 5:
-                print('length error')
                 raise serializers.ValidationError('Title must be more than 10 characters')
             if not (regex.search(data) == None):
-                print('special character symbol')
                 raise serializers.ValidationError('Todo tile can not contain special characters')
         return data
     

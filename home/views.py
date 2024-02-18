@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import viewsets
 from .serializer import TodoSerializer
 from .models import Todo
 
@@ -54,10 +56,10 @@ def post_todo(request):
         })
 
     except Exception as e:
-        print(e)
         return Response({
             'status':False,
-            'message':'Something went wrong'
+            'message':'Something went wrong',
+            'error': e
             
         })
     
@@ -81,7 +83,6 @@ def get_todo(request):
 def patch_todo(request):
     try:
         data = request.data
-        print(data)
         if not data.get('uid'):
             return Response({
             'status':False,
@@ -103,3 +104,54 @@ def patch_todo(request):
             'message':'Invalid Uid'
         })
     pass
+
+#  >>>>>>>>>>> Classs based view
+class TodoView(APIView):
+
+    # Get request
+    def get(self, request):
+        try:
+            data = Todo.objects.all()
+            serializer =  TodoSerializer(data, many=True)
+            return Response({
+                'Status':True,
+                'message':'This is a get request',
+                'data':serializer.data
+            })
+        except Exception as e:
+            return Response({
+                'status': False,
+                'error': e
+            })
+    
+    # Post Request
+    def post(self, request):
+        try:
+            data = request.data
+            serializer = TodoSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({
+                    'status':True,
+                    'message': 'Data succesfully added',
+                    'data':serializer.data
+                })
+            
+            return Response({
+                'Status':False,
+                'message':'Invalid data',
+                'data':serializer.data
+            })
+        except Exception as e:
+            return Response({
+                'status':False,
+                'message':'something went wrong',
+                'error':e
+            })
+
+
+#   >>>>>>>>>>>>>>>>> Viewsets
+        
+class TodoViewSets(viewsets.ModelViewSet):
+    queryset = Todo.objects.all()
+    serializer_class = TodoSerializer
