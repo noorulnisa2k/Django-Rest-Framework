@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 import uuid
 
 # Create your models here.
@@ -12,6 +13,11 @@ class BaseModel(models.Model):
         abstract = True
 
 class Todo(BaseModel):
+    user = models.ForeignKey(User, on_delete = models.SET_NULL, null = True, blank=True)
     todo_title = models.CharField(max_length=100)
     todo_description = models.TextField()
     is_done = models.BooleanField(default = True)
+
+class TodoTiming(BaseModel):
+    todo = models.ForeignKey(Todo, on_delete=models.CASCADE)
+    timing = models.DateField()

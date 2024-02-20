@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Todo
+from .models import Todo, TodoTiming
 import re
 from django.template.defaultfilters import slugify
 
@@ -7,9 +7,9 @@ class TodoSerializer(serializers.ModelSerializer):
     slug = serializers.SerializerMethodField()
     class Meta:
         model = Todo
-        fields = '__all__'
+        # fields = '__all__'
         # fields = ['todo_title','uid','slug']
-        # exclude = ['created_at','updated_at']
+        exclude = ['created_at','updated_at']
 
     # The slugify filter returns a text into one long word containing nothing but lower case ASCII characters and hyphens (-).
     def get_slug(self, obj):
@@ -39,3 +39,11 @@ class TodoSerializer(serializers.ModelSerializer):
     #             raise serializers.ValidationError('Todo tile can not contain special characters')
             
     #     return validate_data
+
+
+class TimingTodoSerializer(serializers.ModelSerializer):
+    todo = TodoSerializer()     # Model field, it will only fetch particular field that are defined in todo serializer
+    class Meta:
+        model = TodoTiming
+        exclude = ['created_at','updated_at']
+        depth = 1   # it will fetch all fields of todo serializer
