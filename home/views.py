@@ -7,31 +7,48 @@ from rest_framework.decorators import action
 from .serializer import TodoSerializer, TimingTodoSerializer
 from .models import Todo, TodoTiming
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import BaseAuthentication, TokenAuthentication
+from rest_framework.pagination import PageNumberPagination
 
-#  >>>>>>>>>>> Classs based view
+class TodoPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
+
+#  >>>>>>>>>>>>>> Classs based view <<<<<<<<<<<<<<<<
 class TodoView(APIView):
-    authentication_classes = [BasicAuthentication]
+    # authentication_classes = [BaseAuthentication]
     permission_classes = [IsAuthenticated]
     # Get request
     def get(self, request):
         try:
-            data = Todo.objects.all()
-            serializer =  TodoSerializer(data, many=True)
-            return Response({
-                'Status':True,
-                'message':'This is a get request',
-                'data':serializer.data
-            })
+            data = Todo.objects.filter(user = request.user)
+            # paginated class instance
+            paginator = TodoPagination()
+            paginator_data = paginator.paginate_queryset(data, request)
+            serializer =  TodoSerializer(paginator_data, many=True)
+
+            # simple serializer response
+            # return Response({
+            #     'Status':True,
+            #     'message':'This is a get request',
+            #     'data': serializer.data
+            # })
+
+            # >>>>>> paginated response return
+            return paginator.get_paginated_response(serializer.data)
+        
         except Exception as e:
             return Response({
                 'status': False,
-                'error': e
+                'error': str(e)
             })
     
     # Post Request
     def post(self, request):
         try:
             data = request.data
+            data['user']=request.user.id
             serializer = TodoSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
@@ -54,7 +71,7 @@ class TodoView(APIView):
             })
 
 
-#   >>>>>>>>>>>>>>>>> Viewsets
+#   >>>>>>>>>>>>>>>>> Viewsets <<<<<<<<<<<<<<<<<<
         
 class TodoViewSets(viewsets.ModelViewSet):
     queryset = Todo.objects.all()
@@ -92,5 +109,5 @@ class TodoViewSets(viewsets.ModelViewSet):
             return Response({
                 'Status':False,
                 'message':'Something went wrong',
-                'error': e
+                'error': str(e)
             })
